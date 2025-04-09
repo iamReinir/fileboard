@@ -3,9 +3,20 @@ use serde::Deserialize;
 use std::fs::File as StdFile;
 use std::io::Read;
 
-pub static CONFIG: Lazy<Mutex<Option<Config>>> = Lazy::new(|| Mutex::new(None));
+//
+// use std::convert::Infallible;
+use http_body_util::Empty;
 use std::sync::Mutex;
 use once_cell::sync::Lazy;
+
+
+use http_body_util::Full;
+use hyper::body::Bytes;
+use http_body_util::{combinators::BoxBody, BodyExt};
+
+//
+
+pub static CONFIG: Lazy<Mutex<Option<Config>>> = Lazy::new(|| Mutex::new(None));
 
 #[derive(Deserialize)]
 pub struct Config {
@@ -70,8 +81,20 @@ pub fn set(value: Config) {
 }
 
 pub fn get() -> Option<Config>{
-    let mut data = CONFIG.lock().unwrap();
+    let data = CONFIG.lock().unwrap();
     data.clone()
 }
 
-    
+
+// We create some utility functions to make Empty and Full bodies
+// fit our broadened Response body type.
+pub fn empty() -> BoxBody<Bytes, hyper::Error> {
+    Empty::<Bytes>::new()
+        .map_err(|never| match never {})
+        .boxed()
+}
+pub fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
+    Full::new(chunk.into())
+        .map_err(|never| match never {})
+        .boxed()
+}

@@ -1,37 +1,21 @@
-// use std::convert::Infallible;
 use std::net::SocketAddr;
-use config::Config;
-use http_body_util::Empty;
-use std::path::Path;
+use filetree::serve_files;
 use std::env;
-use std::sync::Mutex;
-use once_cell::sync::Lazy;
 
-
-use http_body_util::Full;
 use hyper::body::Bytes;
-// use hyper::body::Body;
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
 use hyper::{Request, Response};
 use hyper_util::rt::TokioIo;
 use tokio::net::TcpListener;
-use hyper::header;
-// use lazy_static::lazy_static;
+use urlencoding::decode;
 
-// use hyper::body::Frame;
 use hyper::{Method, StatusCode};
 use http_body_util::{combinators::BoxBody, BodyExt};
-
-
-use std::path::PathBuf;
-use tokio::fs::File;
-use tokio::io::AsyncReadExt;
-// use serde::Deserialize;
-// use std::fs::File as StdFile;
+use config::{empty, full};
 
 pub mod config;
-
+pub mod filetree;
 
 
 
@@ -54,83 +38,31 @@ async fn echo(
     }
 }
 
-// We create some utility functions to make Empty and Full bodies
-// fit our broadened Response body type.
-fn empty() -> BoxBody<Bytes, hyper::Error> {
-    Empty::<Bytes>::new()
-        .map_err(|never| match never {})
-        .boxed()
-}
-fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
-    Full::new(chunk.into())
-        .map_err(|never| match never {})
-        .boxed()
-}
+
 
 // File server
 
 async fn serve_file(
     req: Request<hyper::body::Incoming>,
 ) -> Result<Response<BoxBody<Bytes, hyper::Error>>, hyper::Error> {
-    // Get the requested file path, default to "index.html"
-    let config = config::get().unwrap().server;
-    let path = req.uri().path().trim_start_matches('/');
-    let file_path = if path.is_empty() {
-        "index.html"
-    } else {
-        path
-    };
-    let full_path = Path::new(&config.wwwroot).join(file_path);
-    let mime = guess_mime(path);
-    let path = PathBuf::from(full_path);
-    match File::open(path).await {
-        Ok(mut file) => {
-            let mut contents = Vec::new();
-            file.read_to_end(&mut contents).await.unwrap();
-            let bytes = Bytes::from(contents);
-            Ok(Response::builder()
-                .status(StatusCode::OK)
-                .header(header::CONTENT_TYPE, mime)
-                .body(full(bytes))
-                .unwrap())
-        }
-        Err(_) => {
+    eprintln!("[{}] Request: {} {}", chrono::Local::now().to_rfc3339(), req.method(), req.uri());
+    match req.method() {
+        &Method::GET => {
+            let config = config::get().unwrap().server;
+            let path = req.uri().path().trim_start_matches('/');
+            let decoded_path = decode(path).unwrap().into_owned();
+            serve_files(decoded_path.as_str(), &config.wwwroot).await
+        },
+        &Method::POST => {
+            Ok(Response::new(empty()))
+        },
+        _ => {
             let mut not_found = Response::new(empty());
-            *not_found.status_mut() = StatusCode::NOT_FOUND;
+            *not_found.status_mut() = StatusCode::METHOD_NOT_ALLOWED;
             Ok(not_found)
         }
     }
 }
-
-fn guess_mime(path: &str) -> &'static str {
-    match Path::new(path).extension().and_then(|ext| ext.to_str()) {
-        Some("html") => "text/html",
-        Some("css") => "text/css",
-        Some("js") => "application/javascript",
-        Some("json") => "application/json",  // JSON MIME type (structured text)
-        Some("toml") => "text/plain",         // TOML MIME type (text format)
-        Some("md") => "text/markdown",       // Markdown MIME type (text format)
-        Some("txt") => "text/plain",         // Plain text
-        Some("png") => "image/png",          // Image MIME type
-        Some("jpg") | Some("jpeg") => "image/jpeg", // Image MIME type
-        Some("gif") => "image/gif",          // Image MIME type
-        Some("svg") => "image/svg+xml",      // Image MIME type
-        Some("bmp") => "image/bmp",          // Image MIME type
-        Some("tiff") | Some("tif") => "image/tiff", // Image MIME type
-        Some("mp3") => "audio/mpeg",         // Audio MIME type
-        Some("wav") => "audio/wav",          // Audio MIME type
-        Some("ogg") => "audio/ogg",          // Audio MIME type
-        Some("flac") => "audio/flac",        // Audio MIME type
-        Some("mp4") => "video/mp4",          // Video MIME type
-        Some("webm") => "video/webm",        // Video MIME type
-        Some("avi") => "video/x-msvideo",    // Video MIME type
-        Some("mov") => "video/quicktime",    // Video MIME type
-        Some("mkv") => "video/x-matroska",   // Video MIME type
-        _ => "application/octet-stream",     // Default (download)
-    }
-}
-
-
 
 
 #[tokio::main]
@@ -154,7 +86,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     eprintln!("Starting fileboard at {}:{}",
         if configx.server.allow_public { "0.0.0.0" } else { "localhost" },
-        3000
+        configx.server.port
     );
     eprintln!("Content root: {}", configx.server.wwwroot);
 

@@ -1,6 +1,12 @@
 [profile.dev]
 debug = true
 
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
 [package]
 name = "fileboard"
 version = "0.1.0"

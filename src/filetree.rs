@@ -32,6 +32,28 @@ pub async fn serve_files(path: &str, wwwroot: &str)
     };
 
     if metadata.is_dir() {
+
+        // Check for index.html. Serve that intead
+        let index_path = full_path.join("index.html");
+        if index_path.exists() && index_path.is_file() {
+            match tokio::fs::read(index_path).await {
+                Ok(contents) => {
+                    return Ok(Response::builder()
+                        .status(StatusCode::OK)
+                        .header(header::CONTENT_TYPE, "text/html")
+                        .body(full(contents))
+                        .unwrap());
+                }
+                Err(_) => {
+                    return Ok(Response::builder()
+                        .status(StatusCode::INTERNAL_SERVER_ERROR)
+                        .body(empty())
+                        .unwrap());
+                }
+            }
+        }
+
+        // Else, generate own index
         match directory_page(path, wwwroot).await {
             Ok(html) => return Ok(Response::builder()
                 .status(StatusCode::OK)
@@ -102,7 +124,7 @@ async fn directory_page(relative_path: &str, wwwroot: &str) -> Result<String, St
     match fs::read_dir(&path).await {
         Ok(mut entries) => {
             eprintln!("PATH : {}", relative_path);
-            let mut html = String::from("<html>");
+            let mut html = String::from("<html><meta charset=\"UTF-8\">");
             html.push_str(
                 format!("<header><title>Fileboard - {}</title></header>",
                 relative_path).as_str());

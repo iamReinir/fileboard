@@ -1,0 +1,5 @@
+[server]
+port = 9000
+wwwroot = "/home/reinir/Public"
+allow_public = true
+host = "http://100.87.230.49:9000"

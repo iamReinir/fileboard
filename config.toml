@@ -2,3 +2,4 @@
 port = 8080
 wwwroot = "/home/reinir/Reinir"
 allow_public = false
+host = "http://localhost:8080"

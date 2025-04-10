@@ -1,5 +1,7 @@
 use std::path::Path;
 use std::time::SystemTime;
+use askama::Template;
+use chrono::format;
 use chrono::DateTime;
 use chrono::Local;
 use hyper::body::Bytes;
@@ -12,9 +14,12 @@ use tokio::io::AsyncReadExt;
 use urlencoding::encode;
 
 
+use crate::config;
+use crate::jstemplate::JsTemplate;
 use crate::config::{full, empty};
 
-pub async fn serve_files(path: &str, wwwroot: &str) -> Result<Response<BoxBody<Bytes, hyper::Error>>, hyper::Error>
+pub async fn serve_files(path: &str, wwwroot: &str) 
+    -> Result<Response<BoxBody<Bytes, hyper::Error>>, hyper::Error>
 {
     let full_path = Path::new(wwwroot).join(path);
     let metadata = match fs::metadata(&full_path).await {
@@ -93,7 +98,7 @@ fn guess_mime(path: &str) -> &'static str {
 
 async fn directory_page(relative_path: &str, wwwroot: &str) -> Result<String, String> {
     let path = Path::new(wwwroot).join(relative_path);
-    
+    let host = config::get().unwrap().server.host;
     match fs::read_dir(&path).await {
         Ok(mut entries) => {
             eprintln!("PATH : {}", relative_path);
@@ -103,9 +108,10 @@ async fn directory_page(relative_path: &str, wwwroot: &str) -> Result<String, St
                 relative_path).as_str());
             html.push_str("<body>");
             html.push_str(
-                format!("<body><h1>Directory listing for {}</h1><pre><strong>",
+                format!("<body><h1>Directory listing for {} </h1><pre><strong>",
                 relative_path).as_str());
-            html.push_str("Name\t\t\t\t\tModified\t\t\t\t\tSize<hr>");
+            html.push_str("Name\t\t\t\t\tModified\t\t\t\t\tSize\t\t");
+            html.push_str("<button id=\"uploadBtn\">Upload</button><hr>");
             if !relative_path.is_empty() {
                 html.push_str("<a href=../>../</a><br>");
             }
@@ -145,7 +151,8 @@ async fn directory_page(relative_path: &str, wwwroot: &str) -> Result<String, St
                 }
                 
                 // long-ass span
-                html.push_str("<span style=\"display:inline-block; width: 32ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;\">");
+                html.push_str("<span style=\"display:inline-block; width: 32ch;"); 
+                html.push_str("overflow: hidden; text-overflow: ellipsis; white-space: nowrap;\">");
                 html.push_str(&format!(
                     "<a href=\"{}\">{}</a></span>\t{}\t\t\t\t{}<br>",
                     href, file_name,
@@ -153,7 +160,12 @@ async fn directory_page(relative_path: &str, wwwroot: &str) -> Result<String, St
                     size
                 ));
             }
-            html.push_str("<hr></pre></body></html>");
+            let js_code = JsTemplate {
+                host: format!("{}/{}", host, relative_path).as_str()
+            }.render().unwrap();
+            html.push_str("<hr></pre></body>");
+            html.push_str(&format!("<script>{}</script>", js_code));
+            html.push_str("</html>");
             Ok(html)
         }
         Err(_) => Err("Failed to read directory".to_string()),

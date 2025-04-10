@@ -28,7 +28,8 @@ pub struct Config {
 pub struct ServerConfig {
     pub port: u16,
     pub wwwroot: String,
-    pub allow_public: bool
+    pub allow_public: bool,
+    pub host: String
 }
 
 pub fn load_config(path: &str) -> Result<Config, toml::de::Error> {
@@ -59,7 +60,8 @@ impl Clone for ServerConfig {
         Self {
             port: self.port,
             wwwroot: self.wwwroot.clone(),
-            allow_public: self.allow_public
+            allow_public: self.allow_public,
+            host: self.host.clone()
         }
     }
 }
@@ -67,8 +69,13 @@ impl Clone for ServerConfig {
 
 impl Default for ServerConfig {
     fn default() -> Self {
-        Self { port: 3000, wwwroot: ".".to_string(),allow_public: false }
-    }
+        Self { 
+            port: 3000, 
+            wwwroot: ".".to_string(),
+            allow_public: false, 
+            host: "http://localhost:3000".to_string()
+        }
+    }   
 }
 
 pub fn set(value: Config) {

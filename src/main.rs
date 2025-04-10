@@ -1,50 +1,73 @@
 use std::net::SocketAddr;
+use axum::body::Body;
+use axum::extract::DefaultBodyLimit;
+use axum::extract::Multipart;
+use axum::extract::Path;
+use axum::response::IntoResponse;
+use axum::routing::get;
+use axum::routing::post;
+use axum::Router;
 use filetree::serve_files;
+use tower_http::limit::RequestBodyLimitLayer;
+use tower_http::trace::TraceLayer;
+use upload::upload;
 use std::env;
-
-use hyper::body::Bytes;
-use hyper::server::conn::http1;
-use hyper::service::service_fn;
 use hyper::{Request, Response};
-use hyper_util::rt::TokioIo;
 use tokio::net::TcpListener;
-use urlencoding::decode;
 
 use hyper::{Method, StatusCode};
-use http_body_util::combinators::BoxBody;
-use config::empty;
+use config::{empty, full};
 
 pub mod config;
 pub mod filetree;
+pub mod upload;
+pub mod jstemplate;
 
 
 // File server
-
-async fn serve_file(
-    req: Request<hyper::body::Incoming>,
-) -> Result<Response<BoxBody<Bytes, hyper::Error>>, hyper::Error> {
-    eprintln!("[{}] Request: {} {}", chrono::Local::now().to_rfc3339(), req.method(), req.uri());
-    match *req.method() {
-        Method::GET => {
-            let config = config::get().unwrap().server;
-            let path = req.uri().path().trim_start_matches('/');
-            let decoded_path = decode(path).unwrap().into_owned();
-            serve_files(decoded_path.as_str(), &config.wwwroot).await
-        },
-        Method::POST => {
-            Ok(Response::new(empty()))
-        },
-        _ => {
-            let mut not_found = Response::new(empty());
-            *not_found.status_mut() = StatusCode::METHOD_NOT_ALLOWED;
-            Ok(not_found)
+async fn getfile(Path(path): Path<String>)
+-> impl IntoResponse {
+    eprintln!("[{}] GET : {}", chrono::Local::now().to_rfc3339(), path);
+    let config = config::get().unwrap().server;
+    match serve_files(path.as_str(), &config.wwwroot).await {
+        Ok(resp) => resp,
+        Err(err) => {
+            eprintln!("Error serving file: {:?}", err);
+            Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body(full("Internal server error"))
+                .unwrap()
         }
     }
 }
 
+async fn get_root() -> impl IntoResponse {
+    getfile(Path("".to_string())).await
+}
+
+
+async fn sendfile(
+    Path(path): Path<String>,
+    multipart: Multipart,
+)
+-> impl IntoResponse {
+    let folder = path;
+    let config = config::get().unwrap().server;
+    eprintln!("[{}] POST: {}", chrono::Local::now().to_rfc3339(), folder);
+    match upload(multipart, &folder, &config.wwwroot).await {
+        Ok(msg) => (StatusCode::OK, msg),
+        Err(msg) => (StatusCode::BAD_REQUEST, msg)
+    }
+}
+
+async fn sendfile_root(multipart: Multipart)
+-> impl IntoResponse {
+    sendfile(Path("".to_string()), multipart).await
+}
+
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn main() {
 
     let args: Vec<String> = env::args().collect();
 
@@ -67,33 +90,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         configx.server.port
     );
     eprintln!("Content root: {}", configx.server.wwwroot);
+    let post_routes = Router::new()
+        .route("/", post(sendfile_root))
+        .route("/{*path}", post(sendfile))
+        // Disable the default limit
+        .layer(DefaultBodyLimit::disable())
+        // Set a different limit
+        .layer(RequestBodyLimitLayer::new(20 * 1024 * 1024)); // 20 MB
 
+    let get_routes = Router::new()
+        .route("/", get(get_root))
+        .route("/{*path}", get(getfile));
+
+    let router = post_routes
+        .merge(get_routes)
+        .layer(TraceLayer::new_for_http());
     let addr = SocketAddr::from((address, configx.server.port));
-    // We create a TcpListener and bind it
-    let listener = TcpListener::bind(addr).await?;
-
-    // We start a loop to continuously accept incoming connections
-    loop {
-        let (stream, _) = listener.accept().await?;
-
-        // Use an adapter to access something implementing `tokio::io` traits as if they implement
-        // `hyper::rt` IO traits.
-        let io = TokioIo::new(stream);
-
-        // Spawn a tokio task to serve multiple connections concurrently
-        tokio::task::spawn(async move {
-            // Finally, we bind the incoming connection to our `hello` service
-            if let Err(err) = http1::Builder::new()
-                // `service_fn` converts our function in a `Service`
-                .serve_connection(io, service_fn(serve_file))
-                .await
-            {
-                eprintln!("Error serving connection: {:?}", err);
-            }
-        });
-    }
+    let listener = TcpListener::bind(addr).await.unwrap();
+    axum::serve(listener, router).await.unwrap();
 }
 
-
-
-// End of config things

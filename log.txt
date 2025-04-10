@@ -1,0 +1,213 @@
+warning: unused import: `Request`
+  --> src/main.rs:12:13
+   |
+12 | use hyper::{Request, Response};
+   |             ^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `Method`
+  --> src/main.rs:15:13
+   |
+15 | use hyper::{Method, StatusCode};
+   |             ^^^^^^
+
+warning: unused import: `empty`
+  --> src/main.rs:16:14
+   |
+16 | use config::{empty, full};
+   |              ^^^^^
+
+warning: unused import: `chrono::format`
+ --> src/filetree.rs:4:5
+  |
+4 | use chrono::format;
+  |     ^^^^^^^^^^^^^^
+
+warning: `fileboard` (bin "fileboard") generated 4 warnings (run `cargo fix --bin "fileboard"` to apply 4 suggestions)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running `target/debug/fileboard`
+Config:
+port: 8080
+root: /home/reinir/Reinir
+Starting fileboard at localhost:8080
+Content root: /home/reinir/Reinir
+[2025-04-10T12:40:53.224639222+07:00] POST: Books/Mathematics/
+
+thread 'tokio-runtime-worker' panicked at src/upload.rs:24:40:
+called `Result::unwrap()` on an `Err` value: MultipartError { source: failed to read stream }
+stack backtrace:
+   0: rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: core::result::unwrap_failed
+   3: core::result::Result<T,E>::unwrap
+             at /usr/src/debug/rust/rustc-1.86.0-src/library/core/src/result.rs:1109:23
+   4: fileboard::upload::upload::{{closure}}
+             at ./src/upload.rs:24:20
+   5: fileboard::sendfile::{{closure}}
+             at ./src/main.rs:54:55
+   6: <F as axum::handler::Handler<(M,T1,T2),S>>::call::{{closure}}
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/axum-0.8.3/src/handler/mod.rs:239:43
+   7: <core::pin::Pin<P> as core::future::future::Future>::poll
+             at /usr/src/debug/rust/rustc-1.86.0-src/library/core/src/future/future.rs:124:9
+   8: <futures_util::future::future::map::Map<Fut,F> as core::future::future::Future>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-util-0.3.31/src/future/future/map.rs:55:37
+   9: <futures_util::future::future::Map<Fut,F> as core::future::future::Future>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-util-0.3.31/src/lib.rs:86:13
+  10: <axum::handler::future::IntoServiceFuture<F> as core::future::future::Future>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/axum-0.8.3/src/macros.rs:42:17
+  11: <axum::util::MapIntoResponseFuture<F> as core::future::future::Future>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/axum-0.8.3/src/util.rs:94:26
+  12: <core::pin::Pin<P> as core::future::future::Future>::poll
+             at /usr/src/debug/rust/rustc-1.86.0-src/library/core/src/future/future.rs:124:9
+  13: <tower::util::oneshot::Oneshot<S,Req> as core::future::future::Future>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tower-0.5.2/src/util/oneshot.rs:97:38
+  14: <axum::routing::route::RouteFuture<E> as core::future::future::Future>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/axum-0.8.3/src/routing/route.rs:149:30
+  15: <tower_http::cors::ResponseFuture<F> as core::future::future::Future>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tower-http-0.5.2/src/cors/mod.rs:686:56
+  16: <F as futures_core::future::TryFuture>::try_poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-core-0.3.31/src/future.rs:92:9
+  17: <futures_util::future::try_future::into_future::IntoFuture<Fut> as core::future::future::Future>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-util-0.3.31/src/future/try_future/into_future.rs:34:9
+  18: <futures_util::future::future::map::Map<Fut,F> as core::future::future::Future>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-util-0.3.31/src/future/future/map.rs:55:37
+  19: <futures_util::future::future::Map<Fut,F> as core::future::future::Future>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-util-0.3.31/src/lib.rs:86:13
+  20: <futures_util::future::try_future::MapErr<Fut,F> as core::future::future::Future>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/futures-util-0.3.31/src/lib.rs:86:13
+  21: <tower::util::map_err::MapErrFuture<F,N> as core::future::future::Future>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tower-0.5.2/src/macros.rs:38:17
+  22: <axum::util::MapIntoResponseFuture<F> as core::future::future::Future>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/axum-0.8.3/src/util.rs:94:26
+  23: <core::pin::Pin<P> as core::future::future::Future>::poll
+             at /usr/src/debug/rust/rustc-1.86.0-src/library/core/src/future/future.rs:124:9
+  24: <tower::util::oneshot::Oneshot<S,Req> as core::future::future::Future>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tower-0.5.2/src/util/oneshot.rs:97:38
+  25: <axum::routing::route::RouteFuture<E> as core::future::future::Future>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/axum-0.8.3/src/routing/route.rs:149:30
+  26: <hyper_util::service::oneshot::Oneshot<S,Req> as core::future::future::Future>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/hyper-util-0.1.11/src/service/oneshot.rs:55:38
+  27: <hyper_util::service::glue::TowerToHyperServiceFuture<S,R> as core::future::future::Future>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/hyper-util-0.1.11/src/service/glue.rs:59:9
+  28: <hyper::proto::h1::dispatch::Server<S,hyper::body::incoming::Incoming> as hyper::proto::h1::dispatch::Dispatch>::poll_msg
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/hyper-1.6.0/src/proto/h1/dispatch.rs:538:35
+  29: hyper::proto::h1::dispatch::Dispatcher<D,Bs,I,T>::poll_write
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/hyper-1.6.0/src/proto/h1/dispatch.rs:336:43
+  30: hyper::proto::h1::dispatch::Dispatcher<D,Bs,I,T>::poll_loop
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/hyper-1.6.0/src/proto/h1/dispatch.rs:173:21
+  31: hyper::proto::h1::dispatch::Dispatcher<D,Bs,I,T>::poll_inner
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/hyper-1.6.0/src/proto/h1/dispatch.rs:149:16
+  32: hyper::proto::h1::dispatch::Dispatcher<D,Bs,I,T>::poll_catch
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/hyper-1.6.0/src/proto/h1/dispatch.rs:128:28
+  33: <hyper::proto::h1::dispatch::Dispatcher<D,Bs,I,T> as core::future::future::Future>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/hyper-1.6.0/src/proto/h1/dispatch.rs:471:9
+  34: <hyper::server::conn::http1::UpgradeableConnection<I,S> as core::future::future::Future>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/hyper-1.6.0/src/server/conn/http1.rs:530:26
+  35: <hyper_util::server::conn::auto::UpgradeableConnection<I,S,E> as core::future::future::Future>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/hyper-util-0.1.11/src/server/conn/auto/mod.rs:629:28
+  36: <core::pin::Pin<P> as core::future::future::Future>::poll
+             at /usr/src/debug/rust/rustc-1.86.0-src/library/core/src/future/future.rs:124:9
+  37: axum::serve::WithGracefulShutdown<L,M,S,F>::run::{{closure}}::{{closure}}::{{closure}}
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/macros/select.rs:708:49
+  38: <core::future::poll_fn::PollFn<F> as core::future::future::Future>::poll
+             at /usr/src/debug/rust/rustc-1.86.0-src/library/core/src/future/poll_fn.rs:151:9
+  39: axum::serve::WithGracefulShutdown<L,M,S,F>::run::{{closure}}::{{closure}}
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/axum-0.8.3/src/serve/mod.rs:350:21
+  40: tokio::runtime::task::core::Core<T,S>::poll::{{closure}}
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/task/core.rs:331:17
+  41: tokio::loom::std::unsafe_cell::UnsafeCell<T>::with_mut
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/loom/std/unsafe_cell.rs:16:9
+  42: tokio::runtime::task::core::Core<T,S>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/task/core.rs:320:13
+  43: tokio::runtime::task::harness::poll_future::{{closure}}
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/task/harness.rs:532:19
+  44: <core::panic::unwind_safe::AssertUnwindSafe<F> as core::ops::function::FnOnce<()>>::call_once
+             at /usr/src/debug/rust/rustc-1.86.0-src/library/core/src/panic/unwind_safe.rs:272:9
+  45: std::panicking::try::do_call
+             at /usr/src/debug/rust/rustc-1.86.0-src/library/std/src/panicking.rs:587:40
+  46: __rust_try
+  47: std::panicking::try
+             at /usr/src/debug/rust/rustc-1.86.0-src/library/std/src/panicking.rs:550:19
+  48: std::panic::catch_unwind
+             at /usr/src/debug/rust/rustc-1.86.0-src/library/std/src/panic.rs:358:14
+  49: tokio::runtime::task::harness::poll_future
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/task/harness.rs:520:18
+  50: tokio::runtime::task::harness::Harness<T,S>::poll_inner
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/task/harness.rs:209:27
+  51: tokio::runtime::task::harness::Harness<T,S>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/task/harness.rs:154:15
+  52: tokio::runtime::task::raw::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/task/raw.rs:271:5
+  53: tokio::runtime::task::raw::RawTask::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/task/raw.rs:201:18
+  54: tokio::runtime::task::LocalNotified<S>::run
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/task/mod.rs:463:9
+  55: tokio::runtime::scheduler::multi_thread::worker::Context::run_task::{{closure}}
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/scheduler/multi_thread/worker.rs:600:13
+  56: tokio::task::coop::with_budget
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/task/coop/mod.rs:167:5
+  57: tokio::task::coop::budget
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/task/coop/mod.rs:133:5
+  58: tokio::runtime::scheduler::multi_thread::worker::Context::run_task
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/scheduler/multi_thread/worker.rs:594:9
+  59: tokio::runtime::scheduler::multi_thread::worker::Context::run
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/scheduler/multi_thread/worker.rs:542:24
+  60: tokio::runtime::scheduler::multi_thread::worker::run::{{closure}}::{{closure}}
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/scheduler/multi_thread/worker.rs:507:21
+  61: tokio::runtime::context::scoped::Scoped<T>::set
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/context/scoped.rs:40:9
+  62: tokio::runtime::context::set_scheduler::{{closure}}
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/context.rs:180:26
+  63: std::thread::local::LocalKey<T>::try_with
+             at /usr/src/debug/rust/rustc-1.86.0-src/library/std/src/thread/local.rs:310:12
+  64: std::thread::local::LocalKey<T>::with
+             at /usr/src/debug/rust/rustc-1.86.0-src/library/std/src/thread/local.rs:274:15
+  65: tokio::runtime::context::set_scheduler
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/context.rs:180:9
+  66: tokio::runtime::scheduler::multi_thread::worker::run::{{closure}}
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/scheduler/multi_thread/worker.rs:502:9
+  67: tokio::runtime::context::runtime::enter_runtime
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/context/runtime.rs:65:16
+  68: tokio::runtime::scheduler::multi_thread::worker::run
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/scheduler/multi_thread/worker.rs:494:5
+  69: tokio::runtime::scheduler::multi_thread::worker::Launch::launch::{{closure}}
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/scheduler/multi_thread/worker.rs:460:45
+  70: <tokio::runtime::blocking::task::BlockingTask<T> as core::future::future::Future>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/blocking/task.rs:42:21
+  71: tokio::runtime::task::core::Core<T,S>::poll::{{closure}}
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/task/core.rs:331:17
+  72: tokio::loom::std::unsafe_cell::UnsafeCell<T>::with_mut
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/loom/std/unsafe_cell.rs:16:9
+  73: tokio::runtime::task::core::Core<T,S>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/task/core.rs:320:13
+  74: tokio::runtime::task::harness::poll_future::{{closure}}
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/task/harness.rs:532:19
+  75: <core::panic::unwind_safe::AssertUnwindSafe<F> as core::ops::function::FnOnce<()>>::call_once
+             at /usr/src/debug/rust/rustc-1.86.0-src/library/core/src/panic/unwind_safe.rs:272:9
+  76: std::panicking::try::do_call
+             at /usr/src/debug/rust/rustc-1.86.0-src/library/std/src/panicking.rs:587:40
+  77: __rust_try
+  78: std::panicking::try
+             at /usr/src/debug/rust/rustc-1.86.0-src/library/std/src/panicking.rs:550:19
+  79: std::panic::catch_unwind
+             at /usr/src/debug/rust/rustc-1.86.0-src/library/std/src/panic.rs:358:14
+  80: tokio::runtime::task::harness::poll_future
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/task/harness.rs:520:18
+  81: tokio::runtime::task::harness::Harness<T,S>::poll_inner
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/task/harness.rs:209:27
+  82: tokio::runtime::task::harness::Harness<T,S>::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/task/harness.rs:154:15
+  83: tokio::runtime::task::raw::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/task/raw.rs:271:5
+  84: tokio::runtime::task::raw::RawTask::poll
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/task/raw.rs:201:18
+  85: tokio::runtime::task::UnownedTask<S>::run
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/task/mod.rs:500:9
+  86: tokio::runtime::blocking::pool::Task::run
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/blocking/pool.rs:161:9
+  87: tokio::runtime::blocking::pool::Inner::run
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/blocking/pool.rs:511:17
+  88: tokio::runtime::blocking::pool::Spawner::spawn_thread::{{closure}}
+             at /home/reinir/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.44.1/src/runtime/blocking/pool.rs:469:13
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.

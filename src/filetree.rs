@@ -1,4 +1,7 @@
 use std::path::Path;
+use std::time::SystemTime;
+use chrono::DateTime;
+use chrono::Local;
 use hyper::body::Bytes;
 use hyper::Response;
 use hyper::header;
@@ -65,6 +68,8 @@ fn guess_mime(path: &str) -> &'static str {
         Some("js") => "application/javascript",
         Some("json") => "application/json",  // JSON MIME type (structured text)
         Some("toml") => "text/plain",         // TOML MIME type (text format)
+        Some("pdf") => "application/pdf", // PDF
+        Some("epub") => "application/epub+zip", // epub
         Some("md") => "text/markdown",       // Markdown MIME type (text format)
         Some("txt") => "text/plain",         // Plain text
         Some("png") => "image/png",          // Image MIME type
@@ -87,45 +92,88 @@ fn guess_mime(path: &str) -> &'static str {
 }
 
 async fn directory_page(relative_path: &str, wwwroot: &str) -> Result<String, String> {
-    let wwwroot_path = Path::new(wwwroot);
     let path = Path::new(wwwroot).join(relative_path);
     
     match fs::read_dir(&path).await {
         Ok(mut entries) => {
-            let mut html = String::from("<html><body><h1>Directory listing</h1><ul>");
-            eprint!("PATH : {}", relative_path);
+            eprintln!("PATH : {}", relative_path);
+            let mut html = String::from("<html>");
+            html.push_str(
+                format!("<header><title>Fileboard - {}</title></header>",
+                relative_path).as_str());
+            html.push_str("<body>");
+            html.push_str(
+                format!("<body><h1>Directory listing for {}</h1><pre><strong>",
+                relative_path).as_str());
+            html.push_str("Name\t\t\t\t\tModified\t\t\t\t\tSize<hr>");
             if !relative_path.is_empty() {
-                let parent = Path::new(relative_path).parent().unwrap()
-                    .parent();
-                html.push_str(format!("<li><a href=\"{}\">{}</a></li>",
-                    parent.unwrap_or(Path::new("/")).to_string_lossy(),
-                    "../"
-                ).as_str());
+                html.push_str("<a href=../>../</a><br>");
             }
             while let Ok(Some(entry)) = entries.next_entry().await {
-                let file_name = entry.file_name().to_string_lossy().to_string();
+                let mut file_name = entry.file_name().to_string_lossy().to_string();
                 let encoded_file_name = encode(&file_name);
-
                 let file_path = path.join(&file_name);
-                let relative_path = file_path.strip_prefix(wwwroot_path)
-                    .unwrap_or(&file_path);
 
-                // Get the parent part (if any), then append the encoded filename
+                // Get metadata
+                let metadata = (fs::metadata(&file_path).await).ok();
+
+                // Create the link
                 let mut href = String::from("");
+                /*
                 if let Some(parent) = relative_path.parent() {
                     href.push_str(&parent.to_string_lossy());
                     href.push('/');
                 }
+                */
                 href.push_str(&encoded_file_name);
+
+                
+                // datetime
+                let (datetime, mut size) = metadata.as_ref()
+                    .map(|meta| 
+                        (meta.modified().unwrap_or(SystemTime::now()),
+                        format_size(meta.len())))
+                    .map(|(time, size)| 
+                        (DateTime::<Local>::from(time).format("%Y-%m-%d %H:%M:%S").to_string(),
+                        size))
+                    .unwrap_or((String::new(), String::new()));
+
+                if metadata.map(|meta| meta.is_dir()).unwrap_or(false) {
+                    href.push('/');
+                    file_name.push('/');
+                    size = "-".to_string();
+                }
+                
+                // long-ass span
+                html.push_str("<span style=\"display:inline-block; width: 32ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;\">");
                 html.push_str(&format!(
-                    "<li><a href=\"{}\">{}</a></li>",
-                    href, file_name
+                    "<a href=\"{}\">{}</a></span>\t{}\t\t\t\t{}<br>",
+                    href, file_name,
+                    datetime,
+                    size
                 ));
             }
-
-            html.push_str("</ul></body></html>");
+            html.push_str("<hr></pre></body></html>");
             Ok(html)
         }
         Err(_) => Err("Failed to read directory".to_string()),
+    }
+}
+
+fn format_size(bytes: u64) -> String {
+    const UNITS: [&str; 5] = ["B", "KB", "MB", "GB", "TB"];
+    let mut size = bytes as f64;
+    let mut unit = 0;
+
+    while size >= 1024.0 && unit < UNITS.len() - 1 {
+        size /= 1024.0;
+        unit += 1;
+    }
+
+    // Keep 1 decimal place for non-integer values
+    if size.fract() == 0.0 {
+        format!("{:.0} {}", size, UNITS[unit])
+    } else {
+        format!("{:.1} {}", size, UNITS[unit])
     }
 }

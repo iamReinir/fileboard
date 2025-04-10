@@ -1,4 +1,4 @@
 [server]
 port = 8080
-wwwroot = "/home/reinir/Music"
+wwwroot = "/home/reinir/Reinir"
 allow_public = false

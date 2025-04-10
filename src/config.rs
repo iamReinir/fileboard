@@ -19,6 +19,7 @@ use http_body_util::{combinators::BoxBody, BodyExt};
 pub static CONFIG: Lazy<Mutex<Option<Config>>> = Lazy::new(|| Mutex::new(None));
 
 #[derive(Deserialize)]
+#[derive(Default)]
 pub struct Config {
     pub server: ServerConfig,
 }
@@ -31,9 +32,9 @@ pub struct ServerConfig {
 }
 
 pub fn load_config(path: &str) -> Result<Config, toml::de::Error> {
-    let mut file = StdFile::open(path).expect(format!("Failed to open config file {}", path).as_str());
+    let mut file = StdFile::open(path).unwrap_or_else(|_| panic!("Failed to open config file {}", path));
     let mut content = String::new();
-    file.read_to_string(&mut content).expect(format!("Failed to read config file {}", path).as_str());
+    file.read_to_string(&mut content).unwrap_or_else(|_| panic!("Failed to read config file {}", path));
     let config: Config = toml::de::from_str(content.as_str())?;
     Ok(config)
 }
@@ -56,18 +57,13 @@ impl Clone for Config {
 impl Clone for ServerConfig {
     fn clone(&self) -> Self {
         Self {
-            port: self.port.clone(),
+            port: self.port,
             wwwroot: self.wwwroot.clone(),
-            allow_public: self.allow_public.clone()
+            allow_public: self.allow_public
         }
     }
 }
 
-impl Default for Config {
-    fn default() -> Self {
-        Self { server: Default::default() }
-    }
-}
 
 impl Default for ServerConfig {
     fn default() -> Self {

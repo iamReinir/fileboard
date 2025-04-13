@@ -15,6 +15,9 @@ use urlencoding::encode;
 
 
 use crate::config;
+use crate::jstemplate::CssTemplate;
+use crate::jstemplate::FileItem;
+use crate::jstemplate::IndexTemplate;
 use crate::jstemplate::JsTemplate;
 use crate::config::{full, empty};
 
@@ -126,43 +129,26 @@ fn guess_mime(path: &str) -> &'static str {
 async fn directory_page(relative_path: &str, wwwroot: &str) -> Result<String, String> {
     let path = Path::new(wwwroot).join(relative_path);
     let host = config::get().unwrap().server.host;
+    let css = CssTemplate{}.render().unwrap_or_default();
     match fs::read_dir(&path).await {
         Ok(mut entries) => {
-            let mut html = String::from("<html><meta charset=\"UTF-8\">");
-            html.push_str(
-                format!("<header><title>Fileboard - {}</title></header>",
-                relative_path).as_str());
-            html.push_str("<body>");
-            html.push_str(
-                format!("<body><h1>Directory listing for {} </h1><pre><strong>",
-                relative_path).as_str());
-            html.push_str("Name\t\t\t\t\tModified\t\t\t\t\tSize\t\t");
-            html.push_str("<button id=\"uploadBtn\">Upload</button>");
-            html.push_str("<button id=\"mkdirBtn\">New Folder</button>");
-            html.push_str("<hr>");
+            let mut datalist = Vec::<FileItem>::new();
             if !relative_path.is_empty() {
-                html.push_str("<a href=../>../</a><br>");
+                datalist.push(FileItem { 
+                    name: "../".to_string(),
+                    link: "../".to_string(),
+                    date: String::new(),
+                    size: String::new() 
+                });
             }
             while let Ok(Some(entry)) = entries.next_entry().await {
+                // Get data
                 let mut file_name = entry.file_name().to_string_lossy().to_string();
                 let encoded_file_name = encode(&file_name);
                 let file_path = path.join(&file_name);
-
-                // Get metadata
                 let metadata = (fs::metadata(&file_path).await).ok();
-
-                // Create the link
                 let mut href = String::from("");
-                /*
-                if let Some(parent) = relative_path.parent() {
-                    href.push_str(&parent.to_string_lossy());
-                    href.push('/');
-                }
-                */
                 href.push_str(&encoded_file_name);
-
-                
-                // datetime
                 let (datetime, mut size) = metadata.as_ref()
                     .map(|meta| 
                         (meta.modified().unwrap_or(SystemTime::now()),
@@ -171,29 +157,28 @@ async fn directory_page(relative_path: &str, wwwroot: &str) -> Result<String, St
                         (DateTime::<Local>::from(time).format("%Y-%m-%d %H:%M:%S").to_string(),
                         size))
                     .unwrap_or((String::new(), String::new()));
-
                 if metadata.map(|meta| meta.is_dir()).unwrap_or(false) {
                     href.push('/');
                     file_name.push('/');
                     size = "-".to_string();
                 }
                 
-                // long-ass span
-                html.push_str("<span style=\"display:inline-block; width: 32ch;"); 
-                html.push_str("overflow: hidden; text-overflow: ellipsis; white-space: nowrap;\">");
-                html.push_str(&format!(
-                    "<a href=\"{}\">{}</a></span>\t{}\t\t\t\t{}<br>",
-                    href, file_name,
-                    datetime,
-                    size
-                ));
+                datalist.push(FileItem { 
+                    name:file_name,
+                    link: href, 
+                    date: datetime,
+                    size 
+                });
             }
             let js_code = JsTemplate {
                 host: format!("{}/{}", host, relative_path).as_str()
             }.render().unwrap();
-            html.push_str("<hr></pre></body>");
-            html.push_str(&format!("<script>{}</script>", js_code));
-            html.push_str("</html>");
+            let html = IndexTemplate {
+                items: datalist,
+                path: relative_path,
+                script: &js_code,
+                style: &css
+            }.render().unwrap_or_default();
             Ok(html)
         }
         Err(_) => Err("Failed to read directory".to_string()),

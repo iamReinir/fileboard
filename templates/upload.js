@@ -29,3 +29,23 @@ document.getElementById('uploadBtn').addEventListener('click', async () => {
     }
     };
 });
+
+document.getElementById('mkdirBtn').addEventListener('click', async () => {
+    let path = window.location.pathname;
+    let foldername = prompt("Foldername:");
+    try {
+        const response = await fetch('{{host}}' + foldername, {
+        method: 'PUT'});
+        const message = await response.text();
+        if (response.ok) {
+        alert('Folder created!');
+        } else {
+        alert('Folder created failed. ' + message);
+        }
+        window.location.reload();
+    } catch (err) {
+        console.error(err);
+        alert('Error occurred during folder creation.');
+    }
+});
+

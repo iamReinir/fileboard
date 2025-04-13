@@ -90,31 +90,36 @@ pub async fn serve_files(path: &str, wwwroot: &str)
 
 fn guess_mime(path: &str) -> &'static str {
     match Path::new(path).extension().and_then(|ext| ext.to_str()) {
-        Some("html") => "text/html",
-        Some("css") => "text/css",
-        Some("js") => "application/javascript",
-        Some("json") => "application/json",  // JSON MIME type (structured text)
-        Some("toml") => "text/plain",         // TOML MIME type (text format)
-        Some("pdf") => "application/pdf", // PDF
-        Some("epub") => "application/epub+zip", // epub
-        Some("md") => "text/markdown",       // Markdown MIME type (text format)
-        Some("txt") => "text/plain",         // Plain text
-        Some("png") => "image/png",          // Image MIME type
-        Some("jpg") | Some("jpeg") => "image/jpeg", // Image MIME type
-        Some("gif") => "image/gif",          // Image MIME type
-        Some("svg") => "image/svg+xml",      // Image MIME type
-        Some("bmp") => "image/bmp",          // Image MIME type
-        Some("tiff") | Some("tif") => "image/tiff", // Image MIME type
-        Some("mp3") => "audio/mpeg",         // Audio MIME type
-        Some("wav") => "audio/wav",          // Audio MIME type
-        Some("ogg") => "audio/ogg",          // Audio MIME type
-        Some("flac") => "audio/flac",        // Audio MIME type
-        Some("mp4") => "video/mp4",          // Video MIME type
-        Some("webm") => "video/webm",        // Video MIME type
-        Some("avi") => "video/x-msvideo",    // Video MIME type
-        Some("mov") => "video/quicktime",    // Video MIME type
-        Some("mkv") => "video/x-matroska",   // Video MIME type
-        _ => "application/octet-stream",     // Default (download)
+        Some("html") => "text/html; charset=utf-8",
+        Some("css") => "text/css; charset=utf-8",
+        Some("js") => "application/javascript; charset=utf-8",
+        Some("json") => "application/json; charset=utf-8",
+        Some("toml") => "text/plain; charset=utf-8",
+        Some("md") => "text/markdown; charset=utf-8",
+        Some("txt") => "text/plain; charset=utf-8",
+
+        Some("pdf") => "application/pdf",
+        Some("epub") => "application/epub+zip",
+
+        Some("png") => "image/png",
+        Some("jpg") | Some("jpeg") => "image/jpeg",
+        Some("gif") => "image/gif",
+        Some("svg") => "image/svg+xml",
+        Some("bmp") => "image/bmp",
+        Some("tiff") | Some("tif") => "image/tiff",
+
+        Some("mp3") => "audio/mpeg",
+        Some("wav") => "audio/wav",
+        Some("ogg") => "audio/ogg",
+        Some("flac") => "audio/flac",
+
+        Some("mp4") => "video/mp4",
+        Some("webm") => "video/webm",
+        Some("avi") => "video/x-msvideo",
+        Some("mov") => "video/quicktime",
+        Some("mkv") => "video/x-matroska",
+
+        _ => "application/octet-stream",
     }
 }
 
@@ -123,7 +128,6 @@ async fn directory_page(relative_path: &str, wwwroot: &str) -> Result<String, St
     let host = config::get().unwrap().server.host;
     match fs::read_dir(&path).await {
         Ok(mut entries) => {
-            eprintln!("PATH : {}", relative_path);
             let mut html = String::from("<html><meta charset=\"UTF-8\">");
             html.push_str(
                 format!("<header><title>Fileboard - {}</title></header>",
@@ -133,7 +137,9 @@ async fn directory_page(relative_path: &str, wwwroot: &str) -> Result<String, St
                 format!("<body><h1>Directory listing for {} </h1><pre><strong>",
                 relative_path).as_str());
             html.push_str("Name\t\t\t\t\tModified\t\t\t\t\tSize\t\t");
-            html.push_str("<button id=\"uploadBtn\">Upload</button><hr>");
+            html.push_str("<button id=\"uploadBtn\">Upload</button>");
+            html.push_str("<button id=\"mkdirBtn\">New Folder</button>");
+            html.push_str("<hr>");
             if !relative_path.is_empty() {
                 html.push_str("<a href=../>../</a><br>");
             }
@@ -194,7 +200,7 @@ async fn directory_page(relative_path: &str, wwwroot: &str) -> Result<String, St
     }
 }
 
-fn format_size(bytes: u64) -> String {
+pub fn format_size(bytes: u64) -> String {
     const UNITS: [&str; 5] = ["B", "KB", "MB", "GB", "TB"];
     let mut size = bytes as f64;
     let mut unit = 0;

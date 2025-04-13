@@ -49,3 +49,52 @@ document.getElementById('mkdirBtn').addEventListener('click', async () => {
     }
 });
 
+async function move_req(event, path, filename)
+{
+    event.preventDefault();
+    const newPath = prompt("Move or rename file:", path + "/" + filename);
+    if(newPath == null)
+        return;
+    try {
+        const res = await fetch("{{host}}" + filename, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                destination: newPath
+            })
+        });
+        if (!res.ok) {
+            const error = await res.text();
+            alert("Error: " + error);
+            return;
+        }
+        alert("Moved!");
+        location.reload(); // or refresh part of the page
+    } catch (err) {
+        alert("Failed to move file: " + err.message);
+    }
+}
+
+async function del_req(event, filename)
+{
+    event.preventDefault();
+    if(!confirm('Do you really want to move this file to trash?:\n' + filename)){
+        return;
+    }
+    try {
+        const res = await fetch("{{host}}" + filename, {
+            method: "DELETE"
+        });
+        if (!res.ok) {
+            const error = await res.text();
+            alert("Error: " + error);
+            return;
+        }
+        alert("Moved to trash!");
+        location.reload(); // or refresh part of the page
+    } catch (err) {
+        alert("Failed to trash file: " + err.message);
+    }
+}

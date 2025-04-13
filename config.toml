@@ -1,6 +1,7 @@
 [server]
 port = 8080
-wwwroot = "/home/reinir/Reinir"
+wwwroot = "/home/reinir/Music"
 allow_public = false
 host = "http://localhost:8080"
 max_file_size = 20971520
+trash_can = "/home/reinir/Music/trash"

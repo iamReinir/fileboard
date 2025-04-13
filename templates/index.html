@@ -20,14 +20,14 @@
     <ul>
         {% for item in items %}
             <li>
-                <span class="name" title="{{ item. name}}">
+                <span class="name" title="{{ item.name}}">
                     <a href="{{ item.link }}">{{ item.name }}</a>
                 </span>
                 <span class="modified">{{ item.date }}</span>
                 <span class="size">{{ item.size }}</span>
                 <span class="action">
-                    <a id="trashlnk" href="#">Trash</a>
-                    <a id="movelnk" href="#">Move</a>
+                    <a id="trashlnk" onclick="del_req(event,'{{ item.name }}')" href="#">Trash</a>
+                    <a id="movelnk" onclick="move_req(event,'{{ path }}','{{ item.name }}')" href="#">Move</a>
                 </span>
             </li>
         {% endfor %}
@@ -35,6 +35,6 @@
     <hr>
 </body>
 <script>
-    {{ script }}
+    {{ script|safe }}
 </script>
 </html>

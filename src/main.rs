@@ -5,10 +5,14 @@ use axum::extract::DefaultBodyLimit;
 use axum::extract::Multipart;
 use axum::extract::Path;
 use axum::response::IntoResponse;
+use axum::routing::delete;
 use axum::routing::get;
+use axum::routing::patch;
 use axum::routing::post;
 use axum::routing::put;
 use axum::Router;
+use filemove::del_root;
+use filemove::{mv,del};
 use filetree::format_size;
 use filetree::serve_files;
 use tower_http::limit::RequestBodyLimitLayer;
@@ -25,6 +29,7 @@ pub mod config;
 pub mod filetree;
 pub mod upload;
 pub mod jstemplate;
+pub mod filemove;
 
 
 // File server
@@ -80,8 +85,6 @@ async fn create_dir(Path(path): Path<String>)
 }
 
 
-
-
 #[tokio::main]
 async fn main() {
 
@@ -116,6 +119,7 @@ async fn main() {
     let post_routes = Router::new()
         .route("/", post(sendfile_root))
         .route("/{*path}", post(sendfile))
+        .route("/{*path}", patch(mv))
         // Disable the default limit
         .layer(DefaultBodyLimit::disable())
         // Set a different limit
@@ -124,7 +128,9 @@ async fn main() {
     let get_routes = Router::new()
         .route("/", get(get_root))
         .route("/{*path}", get(getfile))
-        .route("/{*path}", put(create_dir));
+        .route("/{*path}", put(create_dir))
+        .route("/{*path}", delete(del))
+        .route("/", delete(del_root));
 
     let router = post_routes
         .merge(get_routes)

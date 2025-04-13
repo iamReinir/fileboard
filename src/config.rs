@@ -30,7 +30,8 @@ pub struct ServerConfig {
     pub wwwroot: String,
     pub allow_public: bool,
     pub host: String,
-    pub max_file_size: usize
+    pub max_file_size: usize,
+    pub trash_can: String
 }
 
 pub fn load_config(path: &str) -> Result<Config, toml::de::Error> {
@@ -63,7 +64,8 @@ impl Clone for ServerConfig {
             wwwroot: self.wwwroot.clone(),
             allow_public: self.allow_public,
             host: self.host.clone(),
-            max_file_size: self.max_file_size
+            max_file_size: self.max_file_size,
+            trash_can: self.trash_can.clone()
         }
     }
 }
@@ -76,7 +78,8 @@ impl Default for ServerConfig {
             wwwroot: ".".to_string(),
             allow_public: false, 
             host: "http://localhost:3000".to_string(),
-            max_file_size: 20 * 1024 * 1024 // 20MB
+            max_file_size: 20 * 1024 * 1024, // 20MB
+            trash_can: "./.trash".to_string()
         }
     }   
 }
